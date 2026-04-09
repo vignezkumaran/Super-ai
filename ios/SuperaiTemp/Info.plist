@@ -33,8 +33,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Rocket needs photo library access so you can attach images to chat messages.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Rocket may save exported images to your photo library when you choose to do so.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

@@ -1,97 +1,158 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Rocket
 
-# Getting Started
+Rocket is an open-source, privacy-first mobile app that unifies local and cloud AI models in one chat interface.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Highlights
 
-## Step 1: Start Metro
+- Single chat UI for Local, Cloud, and Auto modes
+- Local inference with Ollama
+- Cloud inference with OpenAI and Claude (bring your own API keys)
+- Auto-routing logic for simple/complex prompts
+- Conversation history (save, load, rename, delete, search)
+- Open-source model downloads from Ollama and Hugging Face (MVP)
+- No analytics, no cloud sync, no data collection
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Tech Stack
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- React Native 0.84+
+- TypeScript
+- React Navigation
+- AsyncStorage
+- Axios
 
-```sh
-# Using npm
-npm start
+## Project Structure
 
-# OR using Yarn
-yarn start
+```txt
+.
+├── App.tsx
+├── src/
+│   ├── components/
+│   │   ├── ConversationItem.tsx
+│   │   ├── MessageBubble.tsx
+│   │   ├── ModelSelector.tsx
+│   │   └── TypingIndicator.tsx
+│   ├── hooks/
+│   │   ├── useChat.ts
+│   │   └── useSettings.ts
+│   ├── screens/
+│   │   ├── ChatScreen.tsx
+│   │   ├── HistoryScreen.tsx
+│   │   └── SettingsScreen.tsx
+│   ├── services/
+│   │   ├── CloudService.ts
+│   │   ├── LocalService.ts
+│   │   └── RouterService.ts
+│   ├── types/
+│   │   └── index.ts
+│   └── utils/
+│       ├── constants.ts
+│       └── storage.ts
+├── README.md
+├── CONTRIBUTING.md
+└── LICENSE
 ```
 
-## Step 2: Build and run your app
+## Quick Start
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### 1) Install dependencies
 
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```bash
+npm install
 ```
 
-### iOS
+### 2) iOS setup
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
+```bash
 bundle install
+bundle exec pod install --project-directory=ios
 ```
 
-Then, and every time you update your native dependencies, run:
+If your Ruby version is too old for CocoaPods in this project, use a newer Ruby (3.2+) and rerun the commands.
 
-```sh
-bundle exec pod install
+### 3) Run the app
+
+Start Metro:
+
+```bash
+npm start
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+Run iOS in another terminal:
 
-```sh
-# Using npm
+```bash
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+Run Android:
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```bash
+npm run android
+```
 
-## Step 3: Modify your app
+## Production Builds
 
-Now that you have successfully run the app, let's make changes!
+### iOS Archive (App Store Connect)
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+```bash
+npm run ios:archive
+```
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+Then open Organizer in Xcode and upload archive to App Store Connect.
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### Android Release Bundle (Play Console)
 
-## Congratulations! :tada:
+```bash
+npm run android:bundle
+```
 
-You've successfully run and modified your React Native App. :partying_face:
+The AAB will be generated in `android/app/build/outputs/bundle/release/`.
 
-### Now what?
+For signed release builds, set these Gradle properties in `android/gradle.properties` (or CI secrets):
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+```properties
+ROCKET_UPLOAD_STORE_FILE=release.keystore
+ROCKET_UPLOAD_STORE_PASSWORD=***
+ROCKET_UPLOAD_KEY_ALIAS=***
+ROCKET_UPLOAD_KEY_PASSWORD=***
+```
 
-# Troubleshooting
+## App Store Release Guidelines
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+Use the full step-by-step checklist in `APP_STORE_RELEASE.md` before each submission.
 
-# Learn More
+## Ollama Setup (Local Mode)
 
-To learn more about React Native, take a look at the following resources:
+1. Install Ollama: https://ollama.com
+2. Start Ollama service.
+3. Pull a model:
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+```bash
+ollama pull llama3.2:3b
+```
+
+4. Keep default host/port in settings unless needed:
+- Host: `http://localhost`
+- Port: `11434`
+
+## Auto Routing Rules
+
+- Simple keywords (`what is`, `define`, `explain`, etc.) -> Local
+- Complex keywords (`code`, `build`, `architecture`, `analyze`, etc.) -> Cloud
+- Prompts under 5 words -> Local
+- Default fallback -> Local
+
+## Privacy
+
+- API keys are stored only on device with AsyncStorage.
+- No analytics, tracking, or telemetry.
+- No cloud synchronization.
+- Full source code is auditable.
+
+Read full details in `PRIVACY.md`.
+
+## Roadmap
+
+- Streaming responses
+- Better token and usage analytics
+- Improved Android rename UX for history items
+- Optional Pro layer (future, non-MVP)
