@@ -20,7 +20,8 @@ export type AppIconName =
   | 'info'
   | 'shield'
   | 'shuffle'
-  | 'trash-2';
+  | 'trash-2'
+  | 'chevron-down';
 
 interface Props {
   name: AppIconName;
@@ -177,6 +178,8 @@ export const AppIcon = ({
           <Path d="M9 6V4h6v2" {...common} />
         </>
       )}
+
+      {name === 'chevron-down' && <Polyline points="6 9 12 15 18 9" {...common} />}
     </Svg>
   );
 };

@@ -4,13 +4,16 @@ import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppIcon } from './src/components/AppIcon';
+import { useAuth } from './src/hooks/useAuth';
 import { useChat } from './src/hooks/useChat';
 import { useSettings } from './src/hooks/useSettings';
+import { AuthScreen } from './src/screens/AuthScreen';
 import { ChatScreen } from './src/screens/ChatScreen';
-import { HistoryScreen } from './src/screens/HistoryScreen';
 import { LocalModelsScreen } from './src/screens/LocalModelsScreen';
+import { ProvidersScreen } from './src/screens/ProvidersScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { getColors, ResolvedTheme } from './src/theme/colors';
+import { CLOUD_PROVIDER_MODELS } from './src/utils/constants';
 
 const Tabs = createBottomTabNavigator();
 
@@ -30,8 +33,8 @@ const buildScreenOptions = (
       return <AppIcon name="message-circle" color={color} size={size} strokeWidth={2.2} />;
     }
 
-    if (route.name === 'History') {
-      return <AppIcon name="clock" color={color} size={size} strokeWidth={2.2} />;
+    if (route.name === 'Providers') {
+      return <AppIcon name="cloud" color={color} size={size} strokeWidth={2.2} />;
     }
 
     if (route.name === 'Local Models') {
@@ -44,6 +47,7 @@ const buildScreenOptions = (
 
 function App() {
   const systemScheme = useColorScheme();
+  const { user, authLoading, signInWithEmail, signUpWithEmail, signInWithGoogle, signOutAuth } = useAuth();
 
   const {
     settings,
@@ -74,7 +78,7 @@ function App() {
     startNewConversation,
   } = useChat(settings, isLocalAvailable);
 
-  if (loading) {
+  if (loading || authLoading) {
     return null;
   }
 
@@ -90,6 +94,14 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      {!user ? (
+        <AuthScreen
+          resolvedTheme={resolvedTheme}
+          onEmailLogin={signInWithEmail}
+          onEmailSignup={signUpWithEmail}
+          onGoogleLogin={signInWithGoogle}
+        />
+      ) : (
       <NavigationContainer
         theme={
           isDarkMode
@@ -111,13 +123,10 @@ function App() {
               <ChatScreen
                 resolvedTheme={resolvedTheme}
                 messages={messages}
+                conversations={conversations}
                 cloudProvider={settings.cloudProvider}
                 cloudModel={settings.cloudModel}
-                cloudModelOptions={
-                  settings.cloudProvider === 'openai'
-                    ? ['gpt-3.5-turbo', 'gpt-4']
-                    : ['claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620']
-                }
+                cloudModelOptions={CLOUD_PROVIDER_MODELS[settings.cloudProvider]}
                 isTyping={isTyping}
                 isLocalAvailable={isLocalAvailable}
                 error={error}
@@ -126,6 +135,9 @@ function App() {
                 }}
                 onSend={sendMessage}
                 onNewChat={startNewConversation}
+                onSelectConversation={loadConversation}
+                onRenameConversation={renameConversation}
+                onDeleteConversation={deleteConversation}
               />
             )}
           </Tabs.Screen>
@@ -144,14 +156,13 @@ function App() {
             )}
           </Tabs.Screen>
 
-          <Tabs.Screen name="History">
+          <Tabs.Screen name="Providers">
             {() => (
-              <HistoryScreen
+              <ProvidersScreen
                 resolvedTheme={resolvedTheme}
-                conversations={conversations}
-                onSelect={loadConversation}
-                onRename={renameConversation}
-                onDelete={deleteConversation}
+                settings={settings}
+                onUpdate={updateSettings}
+                appUserEmail={user?.email ?? ''}
               />
             )}
           </Tabs.Screen>
@@ -177,11 +188,15 @@ function App() {
                     },
                   ]);
                 }}
+                onSignOut={async () => {
+                  await signOutAuth();
+                }}
               />
             )}
           </Tabs.Screen>
         </Tabs.Navigator>
       </NavigationContainer>
+      )}
     </SafeAreaProvider>
   );
 }

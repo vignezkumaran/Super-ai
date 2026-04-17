@@ -47,6 +47,29 @@ export const generateCloudResponse = async (
     return text;
   }
 
+  if (provider === 'deepseek') {
+    const { data } = await axios.post(
+      'https://api.deepseek.com/chat/completions',
+      {
+        model,
+        messages,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 45000,
+      },
+    );
+
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) {
+      throw new Error('DeepSeek returned an empty response.');
+    }
+    return text;
+  }
+
   const claudeMessages = messages.map(message => ({
     role: message.role === 'assistant' ? 'assistant' : 'user',
     content: message.content,

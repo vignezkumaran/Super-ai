@@ -1,4 +1,4 @@
-import { OpenSourceModel, Settings } from '../types';
+import { CloudProvider, OpenSourceModel, Settings } from '../types';
 
 export const STORAGE_KEYS = {
   SETTINGS: '@superai/settings',
@@ -9,6 +9,13 @@ export const STORAGE_KEYS = {
 export const DEFAULT_SETTINGS: Settings = {
   openaiApiKey: '',
   claudeApiKey: '',
+  deepseekApiKey: '',
+  openaiSignedIn: false,
+  claudeSignedIn: false,
+  deepseekSignedIn: false,
+  openaiAccountEmail: '',
+  claudeAccountEmail: '',
+  deepseekAccountEmail: '',
   cloudProvider: 'openai',
   cloudModel: 'gpt-3.5-turbo',
   mode: 'auto',
@@ -27,6 +34,21 @@ export const CLAUDE_MODEL_OPTIONS = [
 ];
 
 export const OPENAI_MODEL_OPTIONS = ['gpt-3.5-turbo', 'gpt-4'];
+export const DEEPSEEK_MODEL_OPTIONS = ['deepseek-chat', 'deepseek-reasoner'];
+
+export const CLOUD_PROVIDERS: CloudProvider[] = ['openai', 'deepseek', 'claude'];
+
+export const CLOUD_PROVIDER_MODELS: Record<CloudProvider, string[]> = {
+  openai: OPENAI_MODEL_OPTIONS,
+  deepseek: DEEPSEEK_MODEL_OPTIONS,
+  claude: CLAUDE_MODEL_OPTIONS,
+};
+
+export const PROVIDER_USAGE_LIMITS: Record<CloudProvider, string> = {
+  openai: 'Usage limit: account-based credits/quota (synced at login).',
+  deepseek: 'Usage limit: account-based credits/quota (synced at login).',
+  claude: 'Usage limit: account-based message/token quota (synced at login).',
+};
 
 export const SIMPLE_KEYWORDS = ['what is', 'define', 'explain', 'who is', 'when did', 'where is'];
 export const COMPLEX_KEYWORDS = ['code', 'build', 'design', 'architecture', 'system', 'analyze'];

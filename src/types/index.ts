@@ -1,6 +1,6 @@
 export type Sender = 'user' | 'assistant';
 export type Mode = 'local' | 'cloud' | 'auto';
-export type CloudProvider = 'openai' | 'claude';
+export type CloudProvider = 'openai' | 'claude' | 'deepseek';
 export type OpenSourceModelSource = 'ollama' | 'huggingface';
 export type ThemeMode = 'system' | 'dark' | 'light';
 
@@ -28,6 +28,13 @@ export interface OllamaConfig {
 export interface Settings {
   openaiApiKey: string;
   claudeApiKey: string;
+  deepseekApiKey: string;
+  openaiSignedIn: boolean;
+  claudeSignedIn: boolean;
+  deepseekSignedIn: boolean;
+  openaiAccountEmail: string;
+  claudeAccountEmail: string;
+  deepseekAccountEmail: string;
   cloudProvider: CloudProvider;
   cloudModel: string;
   mode: Mode;

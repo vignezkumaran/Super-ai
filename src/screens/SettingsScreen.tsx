@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppIcon } from '../components/AppIcon';
-import { CloudProvider, Settings, ThemeMode } from '../types';
+import { Settings, ThemeMode } from '../types';
 import { getColors, ResolvedTheme } from '../theme/colors';
 
 interface Props {
@@ -23,9 +23,8 @@ interface Props {
   onUpdate: (patch: Partial<Settings>) => Promise<void>;
   onPullModel: (modelName: string) => Promise<void>;
   onClearHistory: () => Promise<void>;
+  onSignOut: () => Promise<void>;
 }
-
-const CLOUD_PROVIDERS: CloudProvider[] = ['openai', 'claude'];
 
 export const SettingsScreen = ({
   resolvedTheme,
@@ -36,6 +35,7 @@ export const SettingsScreen = ({
   onUpdate,
   onPullModel,
   onClearHistory,
+  onSignOut,
 }: Props) => {
   const colors = getColors(resolvedTheme);
   const styles = createStyles(colors);
@@ -107,58 +107,10 @@ export const SettingsScreen = ({
     >
       <View style={styles.headingRow}>
         <AppIcon name="settings" size={18} color={colors.textPrimary} strokeWidth={2.2} />
-        <Text style={styles.heading}>Settings</Text>
+        <Text style={styles.heading}>App Settings</Text>
       </View>
 
       {!!settingsError && <Text style={styles.errorText}>{settingsError}</Text>}
-
-      <View style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <AppIcon name="cloud" size={14} color={colors.textSecondary} strokeWidth={2.2} />
-          <Text style={styles.section}>Cloud Provider APIs</Text>
-        </View>
-        <View style={styles.row}>
-          {CLOUD_PROVIDERS.map(provider => (
-            <Pressable
-              key={provider}
-              onPress={() => runUpdate({ cloudProvider: provider })}
-              style={[
-                styles.chip,
-                settings.cloudProvider === provider ? styles.chipActive : undefined,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  settings.cloudProvider === provider ? styles.chipTextActive : undefined,
-                ]}
-              >
-                {provider.toUpperCase()}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <Text style={styles.label}>OpenAI API Key</Text>
-        <TextInput
-          value={settings.openaiApiKey}
-          onChangeText={text => runUpdate({ openaiApiKey: text })}
-          placeholder="sk-..."
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Claude API Key</Text>
-        <TextInput
-          value={settings.claudeApiKey}
-          onChangeText={text => runUpdate({ claudeApiKey: text })}
-          placeholder="sk-ant-..."
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
-          style={styles.input}
-        />
-      </View>
 
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
@@ -179,29 +131,6 @@ export const SettingsScreen = ({
             >
               <Text style={[styles.chipText, settings.themeMode === mode && styles.chipTextActive]}>
                 {mode.toUpperCase()}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <AppIcon name="cpu" size={14} color={colors.textSecondary} strokeWidth={2.2} />
-          <Text style={styles.section}>Cloud Model Defaults</Text>
-        </View>
-        <View style={styles.rowWrap}>
-          {(settings.cloudProvider === 'openai'
-            ? ['gpt-3.5-turbo', 'gpt-4']
-            : ['claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620']
-          ).map(model => (
-            <Pressable
-              key={model}
-              onPress={() => runUpdate({ cloudModel: model })}
-              style={[styles.chip, settings.cloudModel === model && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, settings.cloudModel === model && styles.chipTextActive]}>
-                {model}
               </Text>
             </Pressable>
           ))}
@@ -309,10 +238,7 @@ export const SettingsScreen = ({
         </View>
       </View>
 
-      <Pressable
-        onPress={onClearHistory}
-        style={styles.dangerButton}
-      >
+      <Pressable onPress={onClearHistory} style={styles.dangerButton}>
         <View style={styles.buttonRow}>
           <AppIcon name="trash-2" size={14} color={colors.dangerText} strokeWidth={2.2} />
           <Text style={styles.dangerText}>Clear Conversation History</Text>
@@ -326,15 +252,17 @@ export const SettingsScreen = ({
         </View>
       </Pressable>
 
-      <View style={styles.aboutBox}>
-        <View style={styles.sectionHeader}>
-          <AppIcon name="info" size={14} color={colors.textSecondary} strokeWidth={2.2} />
-          <Text style={styles.aboutTitle}>About Rocket</Text>
-        </View>
-        <Text style={styles.aboutText}>
-          Privacy-first chat app combining local Ollama models and cloud AI providers in one place.
-        </Text>
-      </View>
+      <Pressable
+        onPress={() => {
+          onSignOut().catch(error => {
+            const message = error instanceof Error ? error.message : 'Sign out failed.';
+            Alert.alert('Sign out failed', message);
+          });
+        }}
+        style={styles.signOutButton}
+      >
+        <Text style={styles.signOutText}>Sign Out</Text>
+      </Pressable>
     </ScrollView>
   );
 };
@@ -345,155 +273,148 @@ const createStyles = (colors: ReturnType<typeof getColors>) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-  content: {
-    padding: 12,
-  },
-  heading: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  headingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  errorText: {
-    color: colors.errorText,
-    marginBottom: 10,
-    lineHeight: 20,
-  },
-  section: {
-    color: colors.textPrimary,
-    fontWeight: '700',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  sectionCard: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    padding: 12,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginBottom: 6,
-    marginTop: 8,
-  },
-  input: {
-    backgroundColor: colors.inputBackground,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    color: colors.textPrimary,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 6,
-  },
-  rowWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: colors.chipBackground,
-  },
-  chipActive: {
-    backgroundColor: colors.chipActiveBackground,
-    borderColor: colors.chipActiveBackground,
-  },
-  chipText: {
-    color: colors.chipText,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  chipTextActive: {
-    color: colors.chipActiveText,
-  },
-  status: {
-    marginTop: 10,
-    color: colors.infoText,
-    fontWeight: '600',
-  },
-  helperText: {
-    color: colors.textMuted,
-    marginBottom: 8,
-  },
-  inlineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  inlineInput: {
-    flex: 1,
-  },
-  secondaryButton: {
-    backgroundColor: colors.primaryButtonBackground,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  secondaryButtonText: {
-    color: colors.primaryButtonText,
-    fontWeight: '700',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dangerButton: {
-    marginTop: 18,
-    backgroundColor: colors.dangerBackground,
-    borderWidth: 1,
-    borderColor: colors.dangerBorder,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  dangerText: {
-    color: colors.dangerText,
-    fontWeight: '700',
-  },
-  linkButton: {
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: colors.linkText,
-    fontWeight: '600',
-  },
-  aboutBox: {
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    padding: 12,
-  },
-  aboutTitle: {
-    color: colors.textPrimary,
-    fontWeight: '700',
-  },
-  aboutText: {
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-});
+    content: {
+      padding: 12,
+    },
+    heading: {
+      color: colors.textPrimary,
+      fontSize: 22,
+      fontWeight: '700',
+    },
+    headingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 12,
+    },
+    errorText: {
+      color: colors.errorText,
+      marginBottom: 10,
+      lineHeight: 20,
+    },
+    section: {
+      color: colors.textPrimary,
+      fontWeight: '700',
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
+    sectionCard: {
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      padding: 12,
+    },
+    label: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      marginBottom: 6,
+      marginTop: 8,
+    },
+    input: {
+      backgroundColor: colors.inputBackground,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      color: colors.textPrimary,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    rowWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 8,
+    },
+    chip: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: colors.chipBackground,
+    },
+    chipActive: {
+      backgroundColor: colors.chipActiveBackground,
+      borderColor: colors.chipActiveBackground,
+    },
+    chipText: {
+      color: colors.chipText,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    chipTextActive: {
+      color: colors.chipActiveText,
+    },
+    status: {
+      marginTop: 10,
+      color: colors.infoText,
+      fontWeight: '600',
+    },
+    helperText: {
+      color: colors.textMuted,
+      marginBottom: 8,
+    },
+    inlineRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    inlineInput: {
+      flex: 1,
+    },
+    secondaryButton: {
+      backgroundColor: colors.primaryButtonBackground,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    secondaryButtonText: {
+      color: colors.primaryButtonText,
+      fontWeight: '700',
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    dangerButton: {
+      marginTop: 18,
+      backgroundColor: colors.dangerBackground,
+      borderWidth: 1,
+      borderColor: colors.dangerBorder,
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    dangerText: {
+      color: colors.dangerText,
+      fontWeight: '700',
+    },
+    linkButton: {
+      marginTop: 12,
+      alignItems: 'center',
+    },
+    linkText: {
+      color: colors.linkText,
+      fontWeight: '600',
+    },
+    signOutButton: {
+      marginTop: 12,
+      backgroundColor: colors.secondaryButtonBackground,
+      borderRadius: 10,
+      paddingVertical: 11,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    signOutText: {
+      color: colors.secondaryButtonText,
+      fontWeight: '700',
+    },
+  });

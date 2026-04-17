@@ -122,7 +122,12 @@ export const useChat = (settings: Settings, isLocalAvailable: boolean) => {
         };
       }
 
-      const apiKey = settings.cloudProvider === 'openai' ? settings.openaiApiKey : settings.claudeApiKey;
+      const apiKey =
+        settings.cloudProvider === 'openai'
+          ? settings.openaiApiKey
+          : settings.cloudProvider === 'deepseek'
+            ? settings.deepseekApiKey
+            : settings.claudeApiKey;
       const text = await generateCloudResponse(
         settings.cloudProvider,
         apiKey,
